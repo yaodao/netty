@@ -5,7 +5,7 @@
  * "License"); you may not use this file except in compliance with the License. You may obtain a
  * copy of the License at:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -60,19 +60,17 @@ import static io.netty.handler.codec.http2.Http2TestUtil.anyChannelPromise;
 import static io.netty.handler.codec.http2.Http2TestUtil.anyHttp2Settings;
 import static io.netty.handler.codec.http2.Http2TestUtil.assertEqualsAndRelease;
 import static io.netty.handler.codec.http2.Http2TestUtil.bb;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyShort;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.same;
@@ -375,6 +373,18 @@ public class Http2FrameCodecTest {
         assertFalse(f.isSuccess());
         assertThat(f.cause(), instanceOf(UnsupportedMessageTypeException.class));
         assertEquals(0, frame.refCnt());
+    }
+
+    @Test
+    public void unknownFrameTypeOnConnectionStream() throws Exception {
+        // handle the case where unknown frames are sent before a stream is created,
+        // for example: HTTP/2 GREASE testing
+        ByteBuf debugData = bb("debug");
+        frameInboundWriter.writeInboundFrame((byte) 0xb, 0, new Http2Flags(), debugData);
+        channel.flush();
+
+        assertEquals(0, debugData.refCnt());
+        assertTrue(channel.isActive());
     }
 
     @Test

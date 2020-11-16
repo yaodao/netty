@@ -5,7 +5,7 @@
  * version 2.0 (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at:
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -286,11 +286,12 @@ public abstract class AbstractByteBuf extends ByteBuf {
     final void ensureWritable0(int minWritableBytes) {
         final int writerIndex = writerIndex();
         final int targetCapacity = writerIndex + minWritableBytes;
-        if (targetCapacity <= capacity()) {
+        // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarely overflow
+        if (targetCapacity >= 0 & targetCapacity <= capacity()) {
             ensureAccessible();
             return;
         }
-        if (checkBounds && targetCapacity > maxCapacity) {
+        if (checkBounds && (targetCapacity < 0 || targetCapacity > maxCapacity)) {
             ensureAccessible();
             throw new IndexOutOfBoundsException(String.format(
                     "writerIndex(%d) + minWritableBytes(%d) exceeds maxCapacity(%d): %s",
