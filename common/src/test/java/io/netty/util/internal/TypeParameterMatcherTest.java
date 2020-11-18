@@ -43,8 +43,10 @@ public class TypeParameterMatcherTest {
         TypeParameterMatcher.find(new TypeQ(), TypeX.class, "B");
     }
 
+    // 这个是从TypeX到TypeQ，一层层查找泛型B的具体类型。可以运行看过程和结果
     @Test
     public void testAnonymousClass() throws Exception {
+        // 注意：这里的参数1是TypeQ的一个子类对象
         TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>() { }, TypeX.class, "B");
         assertFalse(m.match(new Object()));
         assertFalse(m.match(new A()));
@@ -57,6 +59,7 @@ public class TypeParameterMatcherTest {
         assertFalse(m.match(new CC()));
     }
 
+    // 这个从TypeX到TypeY就查找了泛型C的具体类型，不用查继承结构中的所有类。可以运行看过程和结果
     @Test
     public void testAbstractClass() throws Exception {
         TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ(), TypeX.class, "C");
@@ -68,6 +71,7 @@ public class TypeParameterMatcherTest {
         assertFalse(m.match(new BB()));
         assertFalse(m.match(new BBB()));
         assertFalse(m.match(new C()));
+        // CC类型
         assertTrue(m.match(new CC()));
     }
 
@@ -98,7 +102,9 @@ public class TypeParameterMatcherTest {
     public void testInaccessibleClass() throws Exception {
         TypeParameterMatcher m = TypeParameterMatcher.find(new U<T>() { }, U.class, "E");
         assertFalse(m.match(new Object()));
+        System.out.println(m.match(new Object()));
         assertTrue(m.match(new T()));
+        System.out.println(m.match(new T()));
     }
 
     private static class T { }
@@ -136,9 +142,15 @@ public class TypeParameterMatcherTest {
     }
 
     @Test(expected = IllegalStateException.class)
+    // 这意思是在子类中虽然具体化E为Date类型，但是在父类中取不到这个具体类。
     public void testErasure() throws Exception {
         TypeParameterMatcher m = TypeParameterMatcher.find(new X<String, Date>(), W.class, "E");
         assertTrue(m.match(new Date()));
         assertFalse(m.match(new Object()));
     }
+
+//    public static void main(String[] args) throws Exception {
+//        TypeParameterMatcherTest obj = new TypeParameterMatcherTest();
+//        obj.testErasure();
+//    }
 }
